@@ -145,6 +145,7 @@ UPROGS=\
 	$U/_priotest\
 	$U/_wc\
 	$U/_zombie\
+	$U/_lazytest\
 	$U/_logstress\
 	$U/_forphan\
 	$U/_dorphan\

@@ -72,7 +72,30 @@ usertrap(void)
              vmfault(p->pagetable, r_stval(), (r_scause() == 13) ? 1 : 0) !=
                0) {
     // page fault on lazily-allocated page
+ } else if(r_scause() == 13 || r_scause() == 15) {
+  // MODIFICACIÓN (lazy allocation): fallo de pagina por load/store.
+  // Puede ser una pagina del heap que sbrk() reservo logicamente
+  // pero que todavia no se ha mapeado fisicamente.
+  uint64 va = PGROUNDDOWN(r_stval());
+
+  if(va >= p->sz) {
+    printk("usertrap(): acceso fuera de rango, va=%p pid=%d\n", (void *)va, p->pid);
+    setkilled(p);
   } else {
+    char *mem = kalloc();
+    if(mem == 0){
+      printk("usertrap(): sin memoria, pid=%d\n", p->pid);
+      setkilled(p);
+    } else {
+      memset(mem, 0, PGSIZE);
+      if(mappages(p->pagetable, va, PGSIZE, (uint64)mem, PTE_W|PTE_R|PTE_U) != 0){
+        kfree(mem);
+        printk("usertrap(): mappages fallo, pid=%d\n", p->pid);
+        setkilled(p);
+      }
+    }
+  }
+} else {
     printk("usertrap(): unexpected scause 0x%lx pid=%d\n", r_scause(), p->pid);
     printk("            sepc=0x%lx stval=0x%lx\n", r_sepc(), r_stval());
     setkilled(p);

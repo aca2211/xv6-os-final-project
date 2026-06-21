@@ -243,14 +243,14 @@ growproc(int n)
   struct proc *p = myproc();
 
   sz = p->sz;
-  if (n > 0) {
-    if (sz + n > TRAPFRAME) {
+  if(n > 0){
+    // MODIFICACIÓN (lazy allocation): solo crecemos el tamaño logico.
+    // No llamamos a uvmalloc() aqui -- las paginas fisicas se asignan
+    // bajo demanda en usertrap() cuando el proceso realmente las toca.
+    if(sz + n >= MAXVA)
       return -1;
-    }
-    if ((sz = uvmalloc(p->pagetable, sz, sz + n, PTE_W)) == 0) {
-      return -1;
-    }
-  } else if (n < 0) {
+    sz += n;
+  } else if(n < 0){
     sz = uvmdealloc(p->pagetable, sz, sz + n);
   }
   p->sz = sz;
@@ -460,6 +460,9 @@ scheduler(void)
         best->state = RUNNING;
         best->wait_ticks = 0;
         c->proc = best;
+        // Log scheduler decision for debugging/verification.
+        printk("sched: pid=%d name=%s prio=%d wait=%d\n",
+               best->pid, best->name, best->priority, best->wait_ticks);
         swtch(&c->context, &best->context);
 
         // Process is done running for now.
