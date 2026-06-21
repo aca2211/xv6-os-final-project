@@ -125,6 +125,9 @@ found:
   p->pid = allocpid();
   p->state = USED;
 
+  p->priority = 1; // Default priority
+  p->wait_ticks = 0; // Initialize wait ticks
+
   // Allocate a trapframe page.
   if ((p->trapframe = (struct trapframe *)kalloc()) == 0) {
     freeproc(p);
@@ -437,28 +440,38 @@ scheduler(void)
     intr_on();
     intr_off();
 
-    int found = 0;
+    struct proc *best = 0;
+    int best_prio = 0;
+
     for (p = proc; p < &proc[NPROC]; p++) {
       acquire(&p->lock);
       if (p->state == RUNNABLE) {
-        // Switch to chosen process.  It is the process's job
-        // to release its lock and then reacquire it
-        // before jumping back to us.
-        p->state = RUNNING;
-        c->proc = p;
-        swtch(&c->context, &p->context);
+        if (best == 0 || p->priority > best_prio) {
+          best = p;
+          best_prio = p->priority;
+        }
+      }
+      release(&p->lock);
+    }
+
+    if (best) {
+      acquire(&best->lock);
+      if (best->state == RUNNABLE) {
+        best->state = RUNNING;
+        best->wait_ticks = 0;
+        c->proc = best;
+        swtch(&c->context, &best->context);
 
         // Process is done running for now.
         // It should have changed its p->state before coming back.
         c->proc = 0;
-        found = 1;
       }
-      release(&p->lock);
+      release(&best->lock);
+      continue;
     }
-    if (found == 0) {
-      // nothing to run; stop running on this core until an interrupt.
-      asm volatile("wfi");
-    }
+
+    // nothing to run; stop running on this core until an interrupt.
+    asm volatile("wfi");
   }
 }
 
@@ -580,6 +593,7 @@ wakeup(void *chan)
       acquire(&p->lock);
       if (p->state == SLEEPING && p->chan == chan) {
         p->state = RUNNABLE;
+        p->wait_ticks = 0;
       }
       release(&p->lock);
     }

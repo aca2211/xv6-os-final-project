@@ -18,6 +18,8 @@ struct context {
   uint64 s11;
 };
 
+struct proc;
+
 // Per-CPU state.
 struct cpu {
   struct proc *proc;      // The process running on this cpu, or null.
@@ -81,6 +83,8 @@ enum procstate { UNUSED, USED, SLEEPING, RUNNABLE, RUNNING, ZOMBIE };
 // Per-process state
 struct proc {
   struct spinlock lock;
+  int priority;           // Process priority
+  int wait_ticks;        // Ticks the process has been waiting
 
   // p->lock must be held when using these:
   enum procstate state; // Process state
@@ -102,3 +106,5 @@ struct proc {
   struct inode *cwd;           // Current directory
   char name[16];               // Process name (debugging)
 };
+
+extern struct proc proc[NPROC];
