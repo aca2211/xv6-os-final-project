@@ -95,6 +95,32 @@ sys_kill(void)
   return kkill(pid);
 }
 
+uint64
+sys_setpriority(void)
+{
+  int pid;
+  int prio;
+
+  argint(0, &pid);
+  argint(1, &prio);
+  if (prio < 0)
+    prio = 0;
+  if (prio > 100)
+    prio = 100;
+
+  for (struct proc *p = proc; p < &proc[NPROC]; p++) {
+    acquire(&p->lock);
+    if (p->pid == pid && p->state != UNUSED) {
+      p->priority = prio;
+      p->wait_ticks = 0;
+      release(&p->lock);
+      return 0;
+    }
+    release(&p->lock);
+  }
+  return -1;
+}
+
 // return how many clock tick interrupts have occurred
 // since start.
 uint64
