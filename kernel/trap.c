@@ -163,6 +163,9 @@ kerneltrap()
   w_sstatus(sstatus);
 }
 
+#define AGING_THRESHOLD 5
+#define MAX_PRIORITY 10
+
 void
 clockintr()
 {
@@ -171,6 +174,20 @@ clockintr()
     ticks++;
     wakeup(&ticks);
     release(&tickslock);
+  }
+
+  struct proc *p;
+  for (p = proc; p < &proc[NPROC]; p++) {
+    acquire(&p->lock);
+    if (p->state == RUNNABLE) {
+      p->wait_ticks++;
+      if (p->wait_ticks >= AGING_THRESHOLD) {
+        if (p->priority < MAX_PRIORITY)
+          p->priority++;
+        p->wait_ticks = 0;
+      }
+    }
+    release(&p->lock);
   }
 
   // ask for the next timer interrupt. this also clears

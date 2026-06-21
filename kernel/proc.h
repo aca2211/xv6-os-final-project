@@ -18,6 +18,8 @@ struct context {
   uint64 s11;
 };
 
+struct proc;
+
 // Per-CPU state.
 struct cpu {
   struct proc *proc;      // The process running on this cpu, or null.
@@ -104,3 +106,5 @@ struct proc {
   struct inode *cwd;           // Current directory
   char name[16];               // Process name (debugging)
 };
+
+extern struct proc proc[NPROC];

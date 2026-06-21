@@ -458,6 +458,7 @@ scheduler(void)
       acquire(&best->lock);
       if (best->state == RUNNABLE) {
         best->state = RUNNING;
+        best->wait_ticks = 0;
         c->proc = best;
         swtch(&c->context, &best->context);
 
@@ -592,6 +593,7 @@ wakeup(void *chan)
       acquire(&p->lock);
       if (p->state == SLEEPING && p->chan == chan) {
         p->state = RUNNABLE;
+        p->wait_ticks = 0;
       }
       release(&p->lock);
     }
