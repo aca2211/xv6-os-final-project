@@ -25,6 +25,7 @@ char *sys_sbrk(int, int);
 int pause(int);
 int uptime(void);
 int setpriority(int, int);
+uint64 freepages(void);
 
 // ulib.c
 int stat(const char *, struct stat *);

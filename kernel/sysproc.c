@@ -133,3 +133,8 @@ sys_uptime(void)
   release(&tickslock);
   return xticks;
 }
+uint64
+sys_freepages(void)
+{
+  return freepages();
+}

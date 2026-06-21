@@ -460,9 +460,13 @@ scheduler(void)
         best->state = RUNNING;
         best->wait_ticks = 0;
         c->proc = best;
-        // Log scheduler decision for debugging/verification.
-        printk("sched: pid=%d name=%s prio=%d wait=%d\n",
-               best->pid, best->name, best->priority, best->wait_ticks);
+        // Log scheduler decision only for selected test processes.
+        if (strcmp(best->name, "membench") == 0 ||
+            strcmp(best->name, "testpriority") == 0 ||
+            strcmp(best->name, "priotest") == 0) {
+          printk("sched: pid=%d name=%s prio=%d wait=%d\n",
+                 best->pid, best->name, best->priority, best->wait_ticks);
+        }
         swtch(&c->context, &best->context);
 
         // Process is done running for now.

@@ -140,15 +140,14 @@ UPROGS=\
 	$U/_stressfs\
 	$U/_usertests\
 	$U/_grind\
-	$U/_high\
-	$U/_low\
-	$U/_priotest\
+	$U/_testpriority\
 	$U/_wc\
 	$U/_zombie\
 	$U/_lazytest\
 	$U/_logstress\
 	$U/_forphan\
 	$U/_dorphan\
+	$U/_membench\
 
 fs.img: mkfs/mkfs README $(UPROGS)
 	mkfs/mkfs fs.img README $(UPROGS)
