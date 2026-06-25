@@ -464,8 +464,6 @@ scheduler(void)
         if (strcmp(best->name, "membench") == 0 ||
             strcmp(best->name, "testpriority") == 0 ||
             strcmp(best->name, "priotest") == 0) {
-          printk("sched: pid=%d name=%s prio=%d wait=%d\n",
-                 best->pid, best->name, best->priority, best->wait_ticks);
         }
         swtch(&c->context, &best->context);
 
